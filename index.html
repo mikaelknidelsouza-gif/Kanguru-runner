@@ -18,7 +18,7 @@
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--fg);font-family:"Trebuchet MS",system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:manipulation;user-select:none;-webkit-user-select:none}
 #wrap{width:100%;padding:0 12px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center}
-#stage{position:relative;width:min(100%,760px,calc((100vh - 40px) * 2.923))}
+#stage{position:relative;width:100%}
 canvas{width:100%;height:auto;display:block;border-radius:10px;image-rendering:pixelated}
 #ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;background:transparent;border-radius:10px;color:#2c1a0e;text-shadow:0 1px 0 rgba(255,255,255,.85),0 0 6px rgba(255,255,255,.7);padding:8px;box-sizing:border-box}
 #ov h1{margin:0;font-size:clamp(18px,5vw,34px)}
@@ -27,7 +27,7 @@ button{font:inherit;font-weight:bold;border:3px solid #2c1a0e;background:#e8a24a
 button.alt{background:#f3ece0}
 #pb{position:absolute;left:8px;top:8px;padding:2px 10px;font-size:16px;display:none}
 #hint{text-align:center;font-size:13px;opacity:.7;margin-top:10px}
-@media (max-height:500px){#hint{display:none}#wrap{padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}}
+@media (orientation:landscape){html,body{overflow:hidden}:root{padding-top:0;padding-bottom:0}canvas,#ov{border-radius:0}#hint{display:none}#wrap{padding:0 env(safe-area-inset-right,0px) 0 env(safe-area-inset-left,0px)}}
 </style>
 </head>
 <body>
@@ -42,7 +42,9 @@ button.alt{background:#f3ece0}
 <script>
 (function(){
 var cv=document.getElementById('c'),ctx=cv.getContext('2d'),ov=document.getElementById('ov'),oh=document.getElementById('oh'),op=document.getElementById('op'),b1=document.getElementById('b1'),b2=document.getElementById('b2'),pb=document.getElementById('pb');
-var W=760,H=260,G=210,LEN=1000,SLEN=2000;
+var W=760,H=260,G=210,LEN=1000,SLEN=2000,stage=document.getElementById('stage');
+function fit(){var vw=innerWidth,vh=innerHeight,asp=Math.max(1.6,Math.min(3.4,vw/vh)),dg=G;H=Math.round(W/asp);G=H-50;cv.height=H;stage.style.width=Math.min(vw,vh*asp)+'px';if(typeof s==='object'&&s&&s.y>=dg-52)s.y=G-52}
+fit();addEventListener('resize',fit);addEventListener('orientationchange',function(){setTimeout(fit,250)});
 function P(c){return [parseInt(c.substr(1,2),16),parseInt(c.substr(3,2),16),parseInt(c.substr(5,2),16)]}
 function M(a,b,t){return a.map(function(v,i){return v+(b[i]-v)*t})}
 function K(a){return 'rgb('+a.map(Math.round).join(',')+')'}
@@ -65,7 +67,7 @@ function seas(){var i=Math.floor(s.dist/SLEN),cur=seasIdx(i),st=i?Math.min(1,(s.
 function bio(){var i=Math.floor(s.dist/LEN),t=Math.max(0,Math.min(1,((s.dist%LEN)-(LEN-100))/100));return {a:i%4,b:(i+1)%4,t:t}}
 reset();
 function menu(h,p,t1,f1,t2,f2){oh.textContent=h;op.textContent=p;b1.textContent=t1;b1.onclick=f1;b2.style.display=t2?'':'none';if(t2){b2.textContent=t2;b2.onclick=f2}ov.style.display='flex';pb.style.display='none'}
-function play(){reset();state='run';ov.style.display='none';pb.style.display='block'}
+function play(){var de=document.documentElement;if(de.requestFullscreen&&!document.fullscreenElement)de.requestFullscreen().catch(function(){});reset();state='run';ov.style.display='none';pb.style.display='block'}
 function resume(){state='run';ov.style.display='none';pb.style.display='block'}
 function pause(){if(state!=='run')return;state='paused';menu('Pausado','Pontos: '+Math.floor(s.dist),'Continuar',resume,'Reiniciar',play)}
 function jump(){if(state==='run'&&s.y>=G-52)s.vy=-14.5;else if(state==='over'&&s.t>25)play()}
@@ -186,7 +188,7 @@ function pad(n){return ('00000'+n).slice(-5)}
 function draw(){
   var bb=bio(),A=B[bb.a],N=B[bb.b],t=bb.t;
   C(tint(M(A.sky,N.sky,t)));R(0,0,W,H);
-  C('#fff9');ctx.beginPath();ctx.arc(650,48,24,0,7);ctx.fill();
+  C('#fff9');ctx.beginPath();ctx.arc(W-110,48,24,0,7);ctx.fill();
   drawBg(bb.a,1-t);if(t>0)drawBg(bb.b,t);
   C(tint(M(A.gr,N.gr,t)));R(0,G,W,H-G);
   if(se.w>0){ctx.globalAlpha=se.w;C('#f6f9ff');R(0,G,W,9);ctx.globalAlpha=1}
